@@ -5,8 +5,10 @@ import java.util.UUID;
 
 import org.springframework.data.cassandra.repository.CassandraRepository;
 
+import org.springframework.data.cassandra.repository.Query;
 import pl.codepride.dailyadvisor.userservice.model.entity.Customer;
 
 public interface CustomerRepository extends CassandraRepository<Customer, UUID> {
+
 	List<Customer> findByAge(int age);
 }

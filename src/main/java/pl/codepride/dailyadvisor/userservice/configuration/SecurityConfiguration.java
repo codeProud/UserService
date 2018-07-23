@@ -1,5 +1,11 @@
 package pl.codepride.dailyadvisor.userservice.configuration;
 
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.stereotype.Component;
 import pl.codepride.dailyadvisor.userservice.security.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -46,8 +52,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Autowired
-    @Qualifier("dataSource")
-    private DataSource dataSource;
+    private CustomAuthenticationProvider authProvider;
+
+//    @Autowired
+//    @Qualifier("dataSource")
+//    private DataSource dataSource;
 
     @Value("${spring.queries.users-query}")
     private String usersQuery;
@@ -77,14 +86,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     String dashboardUrl;
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth)
-            throws Exception {
-        auth.
-                jdbcAuthentication()
-                .usersByUsernameQuery(usersQuery)
-                .authoritiesByUsernameQuery(rolesQuery)
-                .dataSource(dataSource)
-                .passwordEncoder(bCryptPasswordEncoder);
+    protected void configure(
+            AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(authProvider);
     }
 
     @Override
@@ -95,14 +99,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .and()
                 .addFilterBefore(filterChain(), UsernamePasswordAuthenticationFilter.class)
                 .logout().disable()
-                .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()).requireCsrfProtectionMatcher(
-                        new NegatedRequestMatcher(
-                                new OrRequestMatcher(
-                                        new AntPathRequestMatcher("/login/facebook"),
-                                        new AntPathRequestMatcher("/login/google")
-                                )
-                        ))
-                .and()
+                .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/").permitAll()
                 .antMatchers("/afterLogin").permitAll()
@@ -149,7 +146,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         filters.add(ssoFilter(facebook(), "/login/facebook"));
         filters.add(ssoFilter(google(), "/login/google"));
 
-        JWTAuthenticationFilter loginFilter = new JWTAuthenticationFilter(this.authenticationManager(),jwtManager);
+        JWTAuthenticationFilter loginFilter = new JWTAuthenticationFilter(this.authenticationManager(), jwtManager);
         loginFilter.setAuthenticationSuccessHandler(handler);
         loginFilter.setAuthenticationFailureHandler(handler);
         loginFilter.setFilterProcessesUrl("/login");
@@ -186,7 +183,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin(frontendUrl);
+        config.addAllowedOrigin("*");
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         source.registerCorsConfiguration("/**", config);

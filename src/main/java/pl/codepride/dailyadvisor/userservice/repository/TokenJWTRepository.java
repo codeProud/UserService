@@ -6,7 +6,6 @@ import pl.codepride.dailyadvisor.userservice.model.entity.TokenJWT;
 
 import java.util.UUID;
 
-@Repository("blacklistRepository")
 public interface TokenJWTRepository extends CassandraRepository<TokenJWT, UUID> {
 
 }
