@@ -1,12 +1,11 @@
 package pl.codepride.dailyadvisor.userservice.service;
 
-import pl.codepride.dailyadvisor.userservice.model.entity.Role;
+import pl.codepride.dailyadvisor.userservice.model.Role;
 import pl.codepride.dailyadvisor.userservice.model.entity.User;
 //import pl.codepride.dailyadvisor.model.entity.UserProfile;
 import pl.codepride.dailyadvisor.userservice.model.request.NewUserRequest;
 //import pl.codepride.dailyadvisor.model.request.UserProfileRequest;
 //import pl.codepride.dailyadvisor.model.response.UserProfileResponse;
-import pl.codepride.dailyadvisor.userservice.repository.RoleRepository;
 //import pl.codepride.dailyadvisor.repository.UserProfileRepository;
 import pl.codepride.dailyadvisor.userservice.repository.UserRepository;
 import pl.codepride.dailyadvisor.userservice.service.Exceptions.DataRepositoryException;
@@ -37,10 +36,6 @@ public class UserServiceImpl implements UserService {
 //    @Autowired
 //    @Qualifier("userProfileRepository")
 //    private UserProfileRepository userProfileRepository;
-
-    @Autowired
-    @Qualifier("roleRepository")
-    private RoleRepository roleRepository;
 
 //    @Autowired
 //    public VerificationTokenService verificationTokenService;
@@ -104,18 +99,18 @@ public class UserServiceImpl implements UserService {
     public void registerUser(NewUserRequest newUserRequest, String role) {
         User user = new User(newUserRequest);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        Role userRole = roleRepository.findByRole(role);
-        user.setRoles(new HashSet<>(Collections.singletonList(userRole)));
+        String userRole = Role.valueOf(role).toString();
+        user.setRole(userRole);
         repository.save(user);
 
-//        UserProfile userProfile = new UserProfile(user, newUserRequest);
+//        UserProfile userProfile = new UserProfile(userId, newUserRequest);
 //        userProfileRepository.save(userProfile);
     }
 
 //    @Override
-//    public UserProfileResponse createUserProfileResponseByUser(User user) {
-//        UserProfile userProfile = userProfileRepository.findByUser(user);
-//        return new UserProfileResponse(user, userProfile);
+//    public UserProfileResponse createUserProfileResponseByUser(User userId) {
+//        UserProfile userProfile = userProfileRepository.findByUser(userId);
+//        return new UserProfileResponse(userId, userProfile);
 //    }
 
 //    @Override
@@ -123,14 +118,13 @@ public class UserServiceImpl implements UserService {
 //        userProfileRepository.updateUserProfile(userId, userProfileRequest.getCity(), userProfileRequest.getAbout(), userProfileRequest.getName(), userProfileRequest.getLastName());
 //    }
 
-    @Override
-    public void upgradeUserToCoach(User user) {
-        Role coachRole = roleRepository.findByRole(ROLE_COACH);
-        if (!user.getRoles().contains(coachRole)) {
-            user.getRoles().add(coachRole);
-            repository.save(user);
-        }
-    }
+//    @Override
+//    public void upgradeUserToCoach(User userId) {
+//        if (!userId.getRole().equals(Role.COACH.toString())) {
+//            userId.set.add(coachRole);
+//            repository.save(userId);
+//        }
+//    }
 
 //    @Override
 //    public List<UserProfile> findByUsers(List<User> users) {
@@ -152,21 +146,19 @@ public class UserServiceImpl implements UserService {
 
 //    @Override
 //    public boolean confirmRegistration(String token) throws DataRepositoryException {
-//        User user = verificationTokenService.confirmToken(token);
-//        enableUser(user);
+//        User userId = verificationTokenService.confirmToken(token);
+//        enableUser(userId);
 //        return true;
 //    }
 
     @Override
     public User registerOauth2User(String email) {
-        User lUser = new User();
-        lUser.setEmail(email);
-        lUser.setEnabled(true);
-        lUser.setActive(true);
-        Role userRole = roleRepository.findByRole(ROLE_USER);
-        lUser = repository.save(lUser);
-        lUser.setRoles(new HashSet<>(Collections.singletonList(userRole)));
-        return repository.save(lUser);
+        User user = new User();
+        user.setEmail(email);
+        user.setEnabled(true);
+        user.setActive(true);
+        user.setRole(Role.USER.toString());
+        return repository.save(user);
     }
 
 }
