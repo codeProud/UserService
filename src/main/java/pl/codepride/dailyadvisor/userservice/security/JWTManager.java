@@ -4,6 +4,7 @@ import pl.codepride.dailyadvisor.userservice.model.entity.TokenJWT;
 import pl.codepride.dailyadvisor.userservice.model.entity.User;
 import pl.codepride.dailyadvisor.userservice.repository.TokenJWTRepository;
 import pl.codepride.dailyadvisor.userservice.repository.UserRepository;
+import pl.codepride.dailyadvisor.userservice.service.RedisService;
 import pl.codepride.dailyadvisor.userservice.service.UserService;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class JWTManager {
     @Autowired
     private TokenJWTRepository tokenJWTRepository;
 
+    @Autowired
+    private RedisService redisService;
+
     private static final String TOKEN_COOKIE_NAME = "_secu";
     private static final String SECRET = "SecretKeyToGenJWTs";
     private static final String [] roles = {"USER","ADMIN","COACH"};
@@ -55,6 +59,7 @@ public class JWTManager {
                             if(tokenJWTRepository.existsById(UUID.fromString(jws.getBody().getId()))) {
                                 TokenJWT jwtToken = tokenJWTRepository.findById(UUID.fromString(jws.getBody().getId())).get();
                                 tokenJWTRepository.delete(jwtToken);
+                                redisService.deleteKey(jwtToken.getTokenId().toString());
                             }
                         });
                     });
@@ -82,6 +87,7 @@ public class JWTManager {
         tokenEntity.setTimestamp(new Date(System.currentTimeMillis()));
         tokenEntity.setUser(user);
         tokenEntity = tokenJWTRepository.save(tokenEntity);
+        redisService.saveKey(tokenEntity.getTokenId().toString());
         response.addCookie(createTokenCookie(user.getEmail(), authorities, tokenEntity.getTokenId().toString()));
     }
 
