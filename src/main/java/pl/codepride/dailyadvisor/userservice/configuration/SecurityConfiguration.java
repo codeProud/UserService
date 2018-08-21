@@ -57,12 +57,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 //    @Autowired
 //    @Qualifier("dataSource")
 //    private DataSource dataSource;
-
-    @Value("${spring.queries.users-query}")
-    private String usersQuery;
-
-    @Value("${spring.queries.roles-query}")
-    private String rolesQuery;
+    
 
     @Autowired
     private OAuth2ClientContext oauth2ClientContext;

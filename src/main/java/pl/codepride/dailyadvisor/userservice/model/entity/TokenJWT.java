@@ -1,6 +1,7 @@
 package pl.codepride.dailyadvisor.userservice.model.entity;
 
 import com.datastax.driver.core.LocalDate;
+import com.datastax.driver.core.utils.UUIDs;
 import lombok.Data;
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
@@ -13,16 +14,17 @@ import java.util.UUID;
 @Data
 public class TokenJWT {
 
-    @Column(value = "token_id")
     @PrimaryKey
     private UUID id;
+
     @Column("user_id")
     private UUID userId;
 
     private LocalDate timestamp;
 
+
     public TokenJWT() {
-        this.id = UUID.randomUUID();
+        this.id = UUIDs.timeBased();
     }
 
     @Override
