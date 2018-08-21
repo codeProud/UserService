@@ -5,18 +5,15 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import pl.codepride.dailyadvisor.userservice.model.entity.Customer;
-import pl.codepride.dailyadvisor.userservice.model.entity.Role;
+import pl.codepride.dailyadvisor.userservice.model.Role;
 import pl.codepride.dailyadvisor.userservice.model.entity.User;
-import pl.codepride.dailyadvisor.userservice.repo.CustomerRepository;
 import pl.codepride.dailyadvisor.userservice.repository.UserRepository;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
@@ -39,9 +36,11 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         if (user != null) {
             String passwordEncoded = bCryptPasswordEncoder.encode(password);
             if (bCryptPasswordEncoder.matches(password, passwordEncoded)) {
-                List<String> rolesList = new ArrayList<>();
-                user.getRoles().forEach(role -> rolesList.add(role.getRole()));
-                return new UsernamePasswordAuthenticationToken(name, password, new ArrayList<>());
+
+                List<GrantedAuthority> grantedAuths =
+                        AuthorityUtils.commaSeparatedStringToAuthorityList(Role.USER.toString());
+                org.springframework.security.core.userdetails.User userDetails = new org.springframework.security.core.userdetails.User(name, password, grantedAuths);
+                return new UsernamePasswordAuthenticationToken(userDetails, password, grantedAuths);
             } else {
                 return null;
             }
