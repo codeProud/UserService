@@ -136,9 +136,11 @@ public class JWTManager {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setId(id);
+        List<String> rolesList = new ArrayList<>();
         for (String role : roles) {
             claims.put(role, authorities.contains(role));
         }
+        claims.put("roles",authorities);
         return Jwts.builder()
                 .setClaims(claims)
                 .signWith(SignatureAlgorithm.HS512, SECRET.getBytes())
