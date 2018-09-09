@@ -7,9 +7,6 @@ import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
 import java.sql.Timestamp;
-import java.time.OffsetDateTime;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -22,29 +19,19 @@ public class VerificationToken {
     @PrimaryKey
     private UUID id;
 
-    private String token;
-    usuniecie tokena rozpierdala
-
+    @Column(value = "user_id")
     private UUID userId;
 
     @Column(value = "expire_date")
-    private OffsetDateTime expiryDate;
+    private String expireDate;
 
     public VerificationToken(UUID userId, UUID id) {
         this.id = UUIDs.timeBased();
         this.userId = userId;
-        OffsetDateTime zdt = OffsetDateTime.now();
-        this.expiryDate = zdt.plusSeconds(EXPIRATION);
+        this.expireDate = new Timestamp(System.currentTimeMillis()).toLocalDateTime().toString();
     }
 
     public VerificationToken() {}
-
-    private Date calculateExpiryDate(int expiryTimeInMinutes) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(new Timestamp(cal.getTime().getTime()));
-        cal.add(Calendar.MINUTE, expiryTimeInMinutes);
-        return new Date(cal.getTime().getTime());
-    }
 
     @Override
     public int hashCode() {
@@ -56,9 +43,8 @@ public class VerificationToken {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         VerificationToken that = (VerificationToken) o;
-        return Objects.equals(getToken(), that.getToken()) &&
-                Objects.equals(getUserId(), that.getUserId()) &&
-                Objects.equals(getExpiryDate(), that.getExpiryDate());
+        return Objects.equals(getUserId(), that.getUserId()) &&
+                Objects.equals(getExpireDate(), that.getExpireDate());
     }
 
 }

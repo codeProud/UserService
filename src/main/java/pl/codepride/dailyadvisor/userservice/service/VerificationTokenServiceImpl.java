@@ -1,16 +1,16 @@
 package pl.codepride.dailyadvisor.userservice.service;
 
+import com.datastax.driver.core.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import pl.codepride.dailyadvisor.userservice.model.entity.User;
 import pl.codepride.dailyadvisor.userservice.model.entity.VerificationToken;
 import pl.codepride.dailyadvisor.userservice.repository.VerificationTokenRepository;
 import pl.codepride.dailyadvisor.userservice.service.Exceptions.DataRepositoryException;
 import pl.codepride.dailyadvisor.userservice.service.Exceptions.EntityExists;
 import pl.codepride.dailyadvisor.userservice.service.Exceptions.EntityNotFoundException;
 
-import java.time.OffsetDateTime;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -67,13 +67,12 @@ public class VerificationTokenServiceImpl implements VerificationTokenService {
 
     @Override
     public UUID confirmToken(String token) throws EntityNotFoundException {
-        VerificationToken verificationToken = repository.findOneByToken(token);
+        Optional<VerificationToken> verificationToken = repository.findById(UUID.fromString(token));
 
-        if(verificationToken != null && (verificationToken.getExpiryDate().compareTo(OffsetDateTime.now()))>0){
-            repository.delete(verificationToken);
-            return verificationToken.getUserId();
-        }
-        else {
+        if(verificationToken.isPresent() ){
+            repository.delete(verificationToken.get());
+            return verificationToken.get().getUserId();
+        } else {
             throw new EntityNotFoundException(VERIFICATION_TOKEN_NOT_FOUND_MESSAGE_CODE);
         }
     }
