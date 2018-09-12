@@ -94,7 +94,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .and()
                 .addFilterBefore(filterChain(), UsernamePasswordAuthenticationFilter.class)
                 .logout().disable()
-                .csrf().disable()
+                .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()).requireCsrfProtectionMatcher(
+                new NegatedRequestMatcher(
+                        new OrRequestMatcher(
+                                new AntPathRequestMatcher("/login/facebook"),
+                                new AntPathRequestMatcher("/login/google"),
+                                new AntPathRequestMatcher("/login/oauth2")
+                        )
+                ))
+                .and()
                 .authorizeRequests()
                 .antMatchers("/").permitAll()
                 .antMatchers("/afterLogin").permitAll()
@@ -126,7 +134,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     public void configure(WebSecurity web) {
         web
                 .ignoring()
-                .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/images/**", "/csrf", "/populate");
+                .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/images/**", "/csrf**", "/populate");
     }
 
     private Filter filterChain() throws Exception {
