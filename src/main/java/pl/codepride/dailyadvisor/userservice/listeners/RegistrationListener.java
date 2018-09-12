@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import pl.codepride.dailyadvisor.userservice.event.OnRegistrationCompleteEvent;
 import pl.codepride.dailyadvisor.userservice.model.entity.User;
-import pl.codepride.dailyadvisor.userservice.model.entity.VerificationToken;
+import pl.codepride.dailyadvisor.userservice.model.entity.MailVerificationToken;
 import pl.codepride.dailyadvisor.userservice.service.Exceptions.DataRepositoryException;
 import pl.codepride.dailyadvisor.userservice.service.VerificationTokenService;
 import pl.codepride.dailyadvisor.userservice.service.EmailService;
@@ -45,9 +45,9 @@ public class RegistrationListener implements
     private void confirmRegistration(OnRegistrationCompleteEvent event) {
         User user = event.getUser();
         UUID token = UUIDs.timeBased();
-        VerificationToken verificationToken = new VerificationToken(event.getUser().getId(), token);
+        MailVerificationToken mailVerificationToken = new MailVerificationToken(event.getUser().getId(), token);
         try {
-            verificationTokenService.create(verificationToken);
+            verificationTokenService.create(mailVerificationToken);
         } catch (DataRepositoryException e) {
             logger.error("Registration token exists");
         }

@@ -11,8 +11,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Data
-@Table(value = "verification_token")
-public class VerificationToken {
+@Table(value = "mail_verification_token")
+public class MailVerificationToken {
     private static final int EXPIRATION = 60 * 60 * 24;
 
 
@@ -25,13 +25,14 @@ public class VerificationToken {
     @Column(value = "expire_date")
     private String expireDate;
 
-    public VerificationToken(UUID userId, UUID id) {
+    public MailVerificationToken(UUID userId, UUID id) {
         this.id = UUIDs.timeBased();
         this.userId = userId;
         this.expireDate = new Timestamp(System.currentTimeMillis()).toLocalDateTime().toString();
     }
 
-    public VerificationToken() {}
+    public MailVerificationToken() {
+    }
 
     @Override
     public int hashCode() {
@@ -42,7 +43,7 @@ public class VerificationToken {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        VerificationToken that = (VerificationToken) o;
+        MailVerificationToken that = (MailVerificationToken) o;
         return Objects.equals(getUserId(), that.getUserId()) &&
                 Objects.equals(getExpireDate(), that.getExpireDate());
     }

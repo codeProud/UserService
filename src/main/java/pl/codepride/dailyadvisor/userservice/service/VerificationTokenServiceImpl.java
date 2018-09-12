@@ -1,16 +1,14 @@
 package pl.codepride.dailyadvisor.userservice.service;
 
-import com.datastax.driver.core.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import pl.codepride.dailyadvisor.userservice.model.entity.VerificationToken;
+import pl.codepride.dailyadvisor.userservice.model.entity.MailVerificationToken;
 import pl.codepride.dailyadvisor.userservice.repository.VerificationTokenRepository;
 import pl.codepride.dailyadvisor.userservice.service.Exceptions.DataRepositoryException;
 import pl.codepride.dailyadvisor.userservice.service.Exceptions.EntityExists;
 import pl.codepride.dailyadvisor.userservice.service.Exceptions.EntityNotFoundException;
 
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -28,9 +26,9 @@ public class VerificationTokenServiceImpl implements VerificationTokenService {
     private VerificationTokenRepository repository;
 
     @Override
-    public VerificationToken create(VerificationToken verificationToken) throws DataRepositoryException {
-        if(verificationToken.getId() == null || !repository.findById(verificationToken.getId()).isPresent()) {
-            return repository.save(verificationToken);
+    public MailVerificationToken create(MailVerificationToken mailVerificationToken) throws DataRepositoryException {
+        if(mailVerificationToken.getId() == null || !repository.findById(mailVerificationToken.getId()).isPresent()) {
+            return repository.save(mailVerificationToken);
         } else {
             throw new EntityExists(VERIFICATION_TOKEN_EXISTS_MESSAGE_CODE);
         }
@@ -47,19 +45,19 @@ public class VerificationTokenServiceImpl implements VerificationTokenService {
     }
 
     @Override
-    public List<VerificationToken> findAll() {
+    public List<MailVerificationToken> findAll() {
         return repository.findAll();
     }
 
     @Override
-    public Optional<VerificationToken> findById(UUID id) {
+    public Optional<MailVerificationToken> findById(UUID id) {
         return repository.findById(id);
     }
 
     @Override
-    public VerificationToken update(VerificationToken verificationToken) throws DataRepositoryException, NoSuchElementException {
-        if(repository.findById(verificationToken.getId()).isPresent()){
-            return repository.save(verificationToken);
+    public MailVerificationToken update(MailVerificationToken mailVerificationToken) throws DataRepositoryException, NoSuchElementException {
+        if(repository.findById(mailVerificationToken.getId()).isPresent()){
+            return repository.save(mailVerificationToken);
         } else {
             throw new EntityNotFoundException(VERIFICATION_TOKEN_NOT_FOUND_MESSAGE_CODE);
         }
@@ -67,7 +65,7 @@ public class VerificationTokenServiceImpl implements VerificationTokenService {
 
     @Override
     public UUID confirmToken(String token) throws EntityNotFoundException {
-        Optional<VerificationToken> verificationToken = repository.findById(UUID.fromString(token));
+        Optional<MailVerificationToken> verificationToken = repository.findById(UUID.fromString(token));
 
         if(verificationToken.isPresent() ){
             repository.delete(verificationToken.get());

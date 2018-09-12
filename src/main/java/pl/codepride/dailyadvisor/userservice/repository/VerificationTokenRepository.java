@@ -1,9 +1,9 @@
 package pl.codepride.dailyadvisor.userservice.repository;
 
 
-import pl.codepride.dailyadvisor.userservice.model.entity.VerificationToken;
+import pl.codepride.dailyadvisor.userservice.model.entity.MailVerificationToken;
 
 
-public interface VerificationTokenRepository extends SimplyRepository<VerificationToken> {
+public interface VerificationTokenRepository extends SimplyRepository<MailVerificationToken> {
 
 }
