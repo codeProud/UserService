@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.stereotype.Component;
+import pl.codepride.dailyadvisor.userservice.model.Role;
 import pl.codepride.dailyadvisor.userservice.model.entity.TokenJWT;
 import pl.codepride.dailyadvisor.userservice.model.entity.User;
 import pl.codepride.dailyadvisor.userservice.repository.TokenJWTRepository;
@@ -77,7 +78,7 @@ public class JWTManager {
             user = Optional.ofNullable(userService.findUserByEmail(email)).orElseGet(() -> {
                 return userService.registerOauth2User(email);
             });
-            authorities = (user.getRoles());
+            authorities = (user.getRoles().stream().map(r->r.toString()).collect(Collectors.toList()));
         }
         TokenJWT tokenEntity = new TokenJWT();
         tokenEntity.setTimestamp(LocalDate.fromMillisSinceEpoch(System.currentTimeMillis()));

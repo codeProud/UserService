@@ -25,14 +25,12 @@ public class User {
     private String email;
     private String password;
     private boolean active;
-    private List<String> roles;
+    private List<Role> roles;
     private boolean enabled;
     private String name;
 
     @Column(value = "last_name")
     private String lastName;
-    private String city;
-    private String about;
 
 
     public User(NewUserRequest newUserRequest) {
@@ -42,11 +40,9 @@ public class User {
         this.setActive(false);
         this.name = newUserRequest.getName();
         this.lastName = newUserRequest.getLastName();
-        this.city = newUserRequest.getCity();
-        this.about = newUserRequest.getAbout();
         this.enabled = false;
         this.roles = new ArrayList<>();
-        this.roles.add(Role.USER.toString());
+        this.roles.add(Role.USER);
     }
 
     public User() {
@@ -69,8 +65,6 @@ public class User {
                 Objects.equals(getPassword(), user.getPassword()) &&
                 Objects.equals(getRoles(), user.getRoles()) &&
                 Objects.equals(getName(), user.getName()) &&
-                Objects.equals(getLastName(), user.getLastName()) &&
-                Objects.equals(getCity(), user.getCity()) &&
-                Objects.equals(getAbout(), user.getAbout());
+                Objects.equals(getLastName(), user.getLastName());
     }
 }

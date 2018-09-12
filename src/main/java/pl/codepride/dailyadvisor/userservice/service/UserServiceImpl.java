@@ -3,8 +3,6 @@ package pl.codepride.dailyadvisor.userservice.service;
 import pl.codepride.dailyadvisor.userservice.model.Role;
 import pl.codepride.dailyadvisor.userservice.model.entity.User;
 import pl.codepride.dailyadvisor.userservice.model.request.NewUserRequest;
-import pl.codepride.dailyadvisor.userservice.model.request.UserProfileRequest;
-import pl.codepride.dailyadvisor.userservice.model.response.UserProfileResponse;
 import pl.codepride.dailyadvisor.userservice.repository.UserRepository;
 import pl.codepride.dailyadvisor.userservice.service.Exceptions.DataRepositoryException;
 import pl.codepride.dailyadvisor.userservice.service.Exceptions.EntityExists;
@@ -77,18 +75,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void registerClient(NewUserRequest newUserRequest) {
-        String[] roles = {Role.USER.toString()};
+        Role[] roles = {Role.USER};
         registerUser(newUserRequest, Arrays.asList(roles));
     }
 
     @Override
     public void registerCoach(NewUserRequest newUserRequest) {
-        String[] roles = {Role.COACH.toString()};
+        Role[] roles = {Role.COACH};
         registerUser(newUserRequest, Arrays.asList(roles));
     }
 
     @Override
-    public void registerUser(NewUserRequest newUserRequest, List<String> roles) {
+    public void registerUser(NewUserRequest newUserRequest, List<Role> roles) {
         User user = new User(newUserRequest);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         user.setRoles(roles);
@@ -96,26 +94,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserProfileResponse createUserProfileResponseByUser(User user) {
-        return new UserProfileResponse(user);
-    }
-
-    @Override
-    public void updateUserProfile(UserProfileRequest userProfileRequest, UUID userId) {
-        repository.updateUserProfile(userId, userProfileRequest.getCity(), userProfileRequest.getAbout(), userProfileRequest.getName(), userProfileRequest.getLastName());
-    }
-
-    @Override
     public void upgradeUserToCoach(User user) {
-        if (!user.getRoles().contains(Role.COACH.toString())) {
-            user.getRoles().add(Role.COACH.toString());
+        if (!user.getRoles().contains(Role.COACH)) {
+            user.getRoles().add(Role.COACH);
             repository.save(user);
         }
-    }
-
-    @Override
-    public List<User> findByCity(String city) {
-        return repository.findByCity(city);
     }
 
     @Override
@@ -139,7 +122,7 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setEnabled(true);
         user.setActive(true);
-        String[] roles = {Role.USER.toString()};
+        Role[] roles = {Role.USER};
         user.setRoles(Arrays.asList(roles));
         return repository.save(user);
     }
