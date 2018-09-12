@@ -14,6 +14,7 @@ import pl.codepride.dailyadvisor.userservice.model.entity.TokenJWT;
 import pl.codepride.dailyadvisor.userservice.model.entity.User;
 import pl.codepride.dailyadvisor.userservice.repository.TokenJWTRepository;
 import pl.codepride.dailyadvisor.userservice.repository.UserRepository;
+import pl.codepride.dailyadvisor.userservice.service.RedisService;
 import pl.codepride.dailyadvisor.userservice.service.UserService;
 
 import javax.servlet.http.Cookie;
@@ -33,6 +34,9 @@ public class JWTManager {
 
     @Autowired
     private TokenJWTRepository tokenJWTRepository;
+
+    @Autowired
+    private RedisService redisService;
 
     private static final String TOKEN_COOKIE_NAME = "_secu";
     private static final String SECRET = "SecretKeyToGenJWTs";
@@ -57,6 +61,7 @@ public class JWTManager {
                             if(tokenJWTRepository.existsById(UUID.fromString(jws.getBody().getId()))) {
                                 TokenJWT jwtToken = tokenJWTRepository.findById(UUID.fromString(jws.getBody().getId())).get();
                                 tokenJWTRepository.delete(jwtToken);
+                                redisService.deleteKey(jwtToken.getId().toString());
                             }
                         });
                     });
@@ -84,6 +89,7 @@ public class JWTManager {
         tokenEntity.setTimestamp(LocalDate.fromMillisSinceEpoch(System.currentTimeMillis()));
         tokenEntity.setUserId(user.getId());
         tokenEntity = tokenJWTRepository.save(tokenEntity);
+        redisService.saveKey(tokenEntity.getId().toString());
         response.addCookie(createTokenCookie(user.getEmail(), authorities, tokenEntity.getId().toString()));
     }
 
@@ -132,9 +138,12 @@ public class JWTManager {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setId(id);
-        for(String role : roles) {
+      
+        List<String> rolesList = new ArrayList<>();
+        for (String role : roles) {
             claims.put(role, authorities.contains(role));
         }
+        claims.put("roles",authorities);
         return Jwts.builder()
                 .setClaims(claims)
                 .signWith(SignatureAlgorithm.HS512, SECRET.getBytes())
