@@ -1,5 +1,4 @@
 group 'pl.codepride.dailyadvisor.userservice'
-version '1.0-SNAPSHOT'
 
 buildscript {
     ext {

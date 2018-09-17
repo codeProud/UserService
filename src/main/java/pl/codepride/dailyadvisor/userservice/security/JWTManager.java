@@ -40,7 +40,7 @@ public class JWTManager {
 
     private static final String TOKEN_COOKIE_NAME = "_secu";
     private static final String SECRET = "SecretKeyToGenJWTs";
-    private static final String [] roles = {"USER","ADMIN","COACH"};
+    //private static final String [] roles = {"USER","ADMIN","COACH"};
 
     public void jwtLogout(HttpServletRequest req, HttpServletResponse res) {
         Cookie[] cookies = req.getCookies();
@@ -115,9 +115,9 @@ public class JWTManager {
                     && tokenJWTRepository.existsById(UUID.fromString(jws.getBody().getId()))) {
                         response.addCookie(jwtCookie.get());
                         List<GrantedAuthority> authorities = new ArrayList<>();
-                        for(String role : roles) {
-                            if((boolean)jws.getBody().get(role)) {
-                                authorities.add(new SimpleGrantedAuthority(role));
+                        for(Role role : Role.values()) {
+                            if((boolean)jws.getBody().get(role.toString())) {
+                                authorities.add(new SimpleGrantedAuthority(role.toString()));
                             }
                         }
                         return new UsernamePasswordAuthenticationToken(user, null, authorities);
@@ -138,10 +138,9 @@ public class JWTManager {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setId(id);
-      
-        List<String> rolesList = new ArrayList<>();
-        for (String role : roles) {
-            claims.put(role, authorities.contains(role));
+
+        for (Role role : Role.values()) {
+            claims.put(role.toString(), authorities.contains(role.toString()));
         }
         claims.put("roles",authorities);
         return Jwts.builder()
