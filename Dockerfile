@@ -14,7 +14,7 @@ FROM adoptopenjdk/openjdk8-openj9:x86_64-alpine-jdk8u181-b13_openj9-0.9.0-slim
 
 ENV CASSANDRA_HOSTS localhost
 ENV CASSANDRA_PORT 9042
-ENV CASSANDRA_KEYSPACE daily3
+ENV CASSANDRA_KEYSPACE user_service
 ENV REDIS_PORT 6379
 ENV REDIS_HOST localhost
 ENV EUREKA_URL localhost:8761
