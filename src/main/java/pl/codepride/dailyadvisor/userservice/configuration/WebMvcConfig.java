@@ -1,5 +1,6 @@
 package pl.codepride.dailyadvisor.userservice.configuration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
@@ -31,17 +32,21 @@ public class WebMvcConfig {
 	}
 
 	@Bean
-	JedisConnectionFactory jedisConnectionFactory() {
+	JedisConnectionFactory jedisConnectionFactory(
+			@Value("${spring.redis.host}") String host,
+			@Value("${spring.redis.port}") int port) {
 		JedisConnectionFactory jedisConFactory
 				= new JedisConnectionFactory();
+		jedisConFactory.setHostName(host);
+		jedisConFactory.setPort(port);
 		return jedisConFactory;
 	}
 
 	@Bean
-	public RedisTemplate<String, String> redisTemplate() {
+	public RedisTemplate<String, String> redisTemplate(JedisConnectionFactory jedisConnectionFactory) {
 		RedisTemplate<String, String> template = new RedisTemplate<>();
 		template.setKeySerializer(new StringRedisSerializer());
-		template.setConnectionFactory(jedisConnectionFactory());
+		template.setConnectionFactory(jedisConnectionFactory);
 		return template;
 	}
 
