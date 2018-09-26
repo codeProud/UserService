@@ -12,7 +12,7 @@ RUN ./gradlew build
 
 FROM adoptopenjdk/openjdk8-openj9:x86_64-alpine-jdk8u181-b13_openj9-0.9.0-slim
 
-ENV CASSANDRA_HOSTS localhost
+ENV CASSANDRA_HOST localhost
 ENV CASSANDRA_PORT 9042
 ENV CASSANDRA_KEYSPACE user_service
 ENV REDIS_PORT 6379
@@ -28,23 +28,10 @@ ENV SPRING_MAIL_PASSWORD password
 ENV XMX 128m
 
 
+RUN /bin/sh -c "apk add --no-cache bash"
 RUN mkdir -p /app
 COPY --from=builder /gradle/build/libs/user-service.jar /app/
+COPY run.sh /app/
+WORKDIR /app
 
-CMD ["java", \
-    "-Xmx${XMX}", "-XX:+IdleTuningGcOnIdle", "-Xtune:virtualized", "-Xscmx128m", "-Xscmaxaot100m", "-Xshareclasses:cacheDir=/opt/shareclasses", \
-    "-jar", "user-service.jar", \
-    "--spring.data.cassandra.keyspace-name=${CASSANDRA_KEYSPACE}", \
-    "--spring.data.cassandra.contact-points=${CASSANDRA_HOSTS}", \
-    "--spring.data.cassandra.port=${CASSANDRA_PORT}", \
-    "--spring.redis.host=${REDIS_HOST}", \
-    "--spring.redis.port=${REDIS_PORT}", \
-    "--server.port=${SERVER_PORT}", \
-    "--eureka.client.serviceurl.defaultzone=http://${EUREKA_URL}/eureka/", \
-    "--facebook.client.clientId=${FACEBOOK_CLIENT_ID}", \
-    "--facebook.client.clientSecret=${FACEBOOK_CLIENT_SECRET}", \
-    "--google.client.clientId=${GOOGLE_CLIENT_ID}", \
-    "--google.client.clientSecret=${GOOGLE_CLIENT_SECRET}", \
-    "--spring.mail.username=${SRING_MAIL_USERNAME}", \
-    "--spring.mail.password=${SPRING_MAIL_PASSWORD}" \
-]
+ENTRYPOINT [ "sh", "./run.sh"]
