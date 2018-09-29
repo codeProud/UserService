@@ -27,8 +27,6 @@ ENV SRING_MAIL_USERNAME mailserver
 ENV SPRING_MAIL_PASSWORD password
 ENV XMX 128m
 
-
-RUN /bin/sh -c "apk add --no-cache bash"
 RUN mkdir -p /app
 COPY --from=builder /gradle/build/libs/user-service.jar /app/
 COPY run.sh /app/
