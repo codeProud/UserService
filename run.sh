@@ -21,5 +21,5 @@ java \
   --spring.mail.password=${SPRING_MAIL_PASSWORD} \
   --frontend.url.parent=${FRONTEND_URL} \
   --frontend.url.main=/${FRONTEND_MAIN} \
-  --frontend.url.login=/${FRONTEND_LOGIN}
+  --frontend.url.login=/${FRONTEND_LOGIN} \
   /
