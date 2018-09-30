@@ -1,5 +1,6 @@
 package pl.codepride.dailyadvisor.userservice.service;
 
+import com.datastax.driver.core.utils.UUIDs;
 import pl.codepride.dailyadvisor.userservice.model.Role;
 import pl.codepride.dailyadvisor.userservice.model.entity.User;
 import pl.codepride.dailyadvisor.userservice.model.request.NewUserRequest;
@@ -122,6 +123,7 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setEnabled(true);
         user.setActive(true);
+        user.setId(UUIDs.timeBased());
         Role[] roles = {Role.USER};
         user.setRoles(Arrays.asList(roles));
         return repository.save(user);

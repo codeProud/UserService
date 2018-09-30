@@ -3,6 +3,7 @@ package pl.codepride.dailyadvisor.userservice.security;
 import com.datastax.driver.core.LocalDate;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -26,6 +27,8 @@ import java.util.stream.Collectors;
 @Component
 public class JWTManager {
 
+    public static String ROLES_CLAIM_NAME = "roles";
+
     @Autowired
     private UserRepository userRepository;
 
@@ -38,9 +41,11 @@ public class JWTManager {
     @Autowired
     private RedisService redisService;
 
-    private static final String TOKEN_COOKIE_NAME = "_secu";
-    private static final String SECRET = "SecretKeyToGenJWTs";
-    //private static final String [] roles = {"USER","ADMIN","COACH"};
+    @Value("${jwt.cookie.name}")
+    private String tokenCookieName;
+
+    @Value("${jwt.secret}")
+    private String secret;
 
     public void jwtLogout(HttpServletRequest req, HttpServletResponse res) {
         Cookie[] cookies = req.getCookies();
@@ -48,12 +53,12 @@ public class JWTManager {
             return;
         }
         Arrays.stream(cookies)
-                .filter(cookie -> cookie.getName().equals(TOKEN_COOKIE_NAME))
+                .filter(cookie -> cookie.getName().equals(tokenCookieName))
                 .findFirst()
                 .ifPresent(cookie -> {
                     Optional.ofNullable(cookie.getValue()).ifPresent(value -> {
                         Jws<Claims> jws = Jwts.parser()
-                                .setSigningKey(SECRET.getBytes())
+                                .setSigningKey(secret.getBytes())
                                 .parseClaimsJws(value);
                         String userName = jws.getBody().getSubject();
                         User user = userRepository.findByEmail(userName);
@@ -99,13 +104,13 @@ public class JWTManager {
             return null;
         }
         Optional<Cookie> jwtCookie = Arrays.stream(cookies)
-                .filter(cookie -> cookie.getName().equals(TOKEN_COOKIE_NAME) && cookie.getValue()!=null)
+                .filter(cookie -> cookie.getName().equals(tokenCookieName) && cookie.getValue()!=null)
                 .findFirst();
         if(jwtCookie.isPresent()) {
             Jws<Claims> jws;
             try {
                 jws = Jwts.parser()
-                        .setSigningKey(SECRET.getBytes())
+                        .setSigningKey(secret.getBytes())
                         .parseClaimsJws(jwtCookie.get().getValue());
             } catch (JwtException | IllegalArgumentException e) {
                 return null;
@@ -115,10 +120,8 @@ public class JWTManager {
                     && tokenJWTRepository.existsById(UUID.fromString(jws.getBody().getId()))) {
                         response.addCookie(jwtCookie.get());
                         List<GrantedAuthority> authorities = new ArrayList<>();
-                        for(Role role : Role.values()) {
-                            if((boolean)jws.getBody().get(role.toString())) {
-                                authorities.add(new SimpleGrantedAuthority(role.toString()));
-                            }
+                        for(Object role: jws.getBody().get(ROLES_CLAIM_NAME, List.class)) {
+                            authorities.add(new SimpleGrantedAuthority((String)role));
                         }
                         return new UsernamePasswordAuthenticationToken(user, null, authorities);
             }
@@ -127,7 +130,7 @@ public class JWTManager {
     }
 
     private Cookie createTokenCookie(String subject, List<String> authorities, String id) {
-        Cookie tokenCookie = new Cookie(TOKEN_COOKIE_NAME, createToken(subject, authorities, id));
+        Cookie tokenCookie = new Cookie(tokenCookieName, createToken(subject, authorities, id));
         tokenCookie.setHttpOnly(true);
         tokenCookie.setPath("/");
         return tokenCookie;
@@ -139,13 +142,10 @@ public class JWTManager {
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setId(id);
 
-        for (Role role : Role.values()) {
-            claims.put(role.toString(), authorities.contains(role.toString()));
-        }
-        claims.put("roles",authorities);
+        claims.put(ROLES_CLAIM_NAME,authorities);
         return Jwts.builder()
                 .setClaims(claims)
-                .signWith(SignatureAlgorithm.HS512, SECRET.getBytes())
+                .signWith(SignatureAlgorithm.HS512, secret.getBytes())
                 .compact();
     }
 }
