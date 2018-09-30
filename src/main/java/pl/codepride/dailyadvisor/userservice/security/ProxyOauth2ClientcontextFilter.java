@@ -10,7 +10,7 @@ import java.io.UnsupportedEncodingException;
 
 public class ProxyOauth2ClientcontextFilter extends OAuth2ClientContextFilter {
 
-    @Value("${server.prefix}")
+    @Value("${server.proxy.prefix}")
     private String serverPrefix;
 
     protected String calculateCurrentUri(HttpServletRequest request)

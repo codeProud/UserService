@@ -10,6 +10,8 @@ java \
   --spring.redis.host=${REDIS_HOST} \
   --spring.redis.port=${REDIS_PORT} \
   --server.port=${SERVER_PORT} \
+  --server.proxy.prefix=${USER_SERVICE_PREFIX} \
+  --logging.level.root=${LOGGING_LEVEL} \
   --eureka.client.serviceUrl.defaultZone=http://${EUREKA_URL}/eureka/ \
   --facebook.client.clientId=${FACEBOOK_CLIENT_ID} \
   --facebook.client.clientSecret=${FACEBOOK_CLIENT_SECRET} \
