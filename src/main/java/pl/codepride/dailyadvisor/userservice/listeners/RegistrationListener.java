@@ -28,8 +28,8 @@ public class RegistrationListener implements
     @Autowired
     private EmailService emailService;
 
-    @Value("${frontend.server.port}")
-    private String serverPort;
+    @Value("${frontend.url.parent}")
+    String frontendUrl;
 
     @Autowired
     private VerificationTokenService verificationTokenService;
@@ -51,7 +51,7 @@ public class RegistrationListener implements
         } catch (DataRepositoryException e) {
             logger.error("Registration token exists");
         }
-        String text = "http://localhost:" + serverPort + "/registrationConfirm/" + token.toString();
+        String text = frontendUrl + "/registrationConfirm/" + token.toString();
         emailService.sendSimpleMessage(user.getEmail(), VERIFICATION_MAIL_SUBJECT, text);
     }
 
