@@ -1,9 +1,12 @@
 package pl.codepride.dailyadvisor.userservice.configuration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.spi.DocumentationType;
@@ -26,6 +29,25 @@ public class WebMvcConfig {
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	JedisConnectionFactory jedisConnectionFactory(
+			@Value("${spring.redis.host}") String host,
+			@Value("${spring.redis.port}") int port) {
+		JedisConnectionFactory jedisConFactory
+				= new JedisConnectionFactory();
+		jedisConFactory.setHostName(host);
+		jedisConFactory.setPort(port);
+		return jedisConFactory;
+	}
+
+	@Bean
+	public RedisTemplate<String, String> redisTemplate(JedisConnectionFactory jedisConnectionFactory) {
+		RedisTemplate<String, String> template = new RedisTemplate<>();
+		template.setKeySerializer(new StringRedisSerializer());
+		template.setConnectionFactory(jedisConnectionFactory);
+		return template;
 	}
 
 }

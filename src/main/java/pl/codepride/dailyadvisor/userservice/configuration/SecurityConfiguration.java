@@ -6,6 +6,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+import pl.codepride.dailyadvisor.userservice.repository.PreservedStateRepository;
 import pl.codepride.dailyadvisor.userservice.security.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -54,21 +56,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Autowired
     private CustomAuthenticationProvider authProvider;
 
-//    @Autowired
-//    @Qualifier("dataSource")
-//    private DataSource dataSource;
-
-    @Value("${spring.queries.users-query}")
-    private String usersQuery;
-
-    @Value("${spring.queries.roles-query}")
-    private String rolesQuery;
-
     @Autowired
     private OAuth2ClientContext oauth2ClientContext;
-
-    @Autowired
-    private OAuth2ClientContextFilter oauth2ClientContextFilter;
 
     @Autowired
     private LoginAuthenticationHandler handler;
@@ -78,6 +67,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private JWTManager jwtManager;
+
+    @Autowired
+    private PreservedStateRepository preservedStateRepository;
 
     @Value("${frontend.url.parent}")
     String frontendUrl;
@@ -99,7 +91,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .and()
                 .addFilterBefore(filterChain(), UsernamePasswordAuthenticationFilter.class)
                 .logout().disable()
-                .csrf().disable()
+                .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()).requireCsrfProtectionMatcher(
+                new NegatedRequestMatcher(
+                        new OrRequestMatcher(
+                                new AntPathRequestMatcher("/login/facebook"),
+                                new AntPathRequestMatcher("/login/google"),
+                                new AntPathRequestMatcher("/login/oauth2")
+                        )
+                ))
+                .and()
                 .authorizeRequests()
                 .antMatchers("/").permitAll()
                 .antMatchers("/afterLogin").permitAll()
@@ -131,7 +131,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     public void configure(WebSecurity web) {
         web
                 .ignoring()
-                .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/images/**", "/csrf", "/populate");
+                .antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/images/**", "/csrf**", "/populate");
     }
 
     private Filter filterChain() throws Exception {
@@ -159,7 +159,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private Filter ssoFilter(ClientResources client, String path) {
         OAuth2ClientAuthenticationProcessingFilter oAuth2ClientAuthenticationFilter = new OAuth2ClientAuthenticationProcessingFilter(path);
-        OAuth2RestTemplate oAuth2RestTemplate = new OAuth2RestTemplate(client.getClient(), oauth2ClientContext);
+        OAuth2RestTemplate oAuth2RestTemplate = new OAuth2RestTemplate(client.getClient(), new DatabaseOauth2ClientContext(oauth2ClientContext, preservedStateRepository));
         oAuth2ClientAuthenticationFilter.setRestTemplate(oAuth2RestTemplate);
         UserInfoTokenServices tokenServices = new UserInfoTokenServices(client.getResource().getUserInfoUri(),
                 client.getClient().getClientId());
@@ -170,10 +170,14 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public FilterRegistrationBean oauth2ClientFilterRegistration(
-            OAuth2ClientContextFilter filter) {
+    public ProxyOauth2ClientcontextFilter proxyOauth2ClientcontextFilter() {
+        return new ProxyOauth2ClientcontextFilter();
+    }
+
+    @Bean
+    public FilterRegistrationBean oauth2ClientFilterRegistration() {
         FilterRegistrationBean registration = new FilterRegistrationBean();
-        registration.setFilter(filter);
+        registration.setFilter(proxyOauth2ClientcontextFilter());
         registration.setOrder(-103);
         return registration;
     }

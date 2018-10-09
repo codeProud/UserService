@@ -3,8 +3,6 @@ package pl.codepride.dailyadvisor.userservice.model.request;
 import lombok.Data;
 
 @Data
-public class LoginRequest {
-    private String username;
-
-    private String password;
+public class RegistrationConfirmRequest {
+    String token;
 }

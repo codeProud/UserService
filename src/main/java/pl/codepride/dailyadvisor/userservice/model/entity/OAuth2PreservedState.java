@@ -1,7 +1,5 @@
 package pl.codepride.dailyadvisor.userservice.model.entity;
 
-import com.datastax.driver.core.LocalDate;
-import com.datastax.driver.core.utils.UUIDs;
 import lombok.Data;
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
@@ -10,30 +8,30 @@ import org.springframework.data.cassandra.core.mapping.Table;
 import java.util.Objects;
 import java.util.UUID;
 
-@Table("token_jwt")
+@Table("oauth_preserved_state")
 @Data
-public class TokenJWT {
+public class OAuth2PreservedState {
 
     @PrimaryKey
     private UUID id;
 
-    @Column("user_id")
-    private UUID userId;
+    @Column("state_key")
+    private String stateKey;
 
-    private LocalDate timestamp;
+    @Column("preserved_state")
+    private String preservedState;
 
 
-    public TokenJWT() {
-        this.id = UUIDs.timeBased();
+    public OAuth2PreservedState() {
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        TokenJWT tokenJWT = (TokenJWT) o;
-        return Objects.equals(userId, tokenJWT.userId) &&
-                Objects.equals(timestamp, tokenJWT.timestamp);
+        OAuth2PreservedState that = (OAuth2PreservedState) o;
+        return Objects.equals(getStateKey(), that.getStateKey()) &&
+                Objects.equals(getPreservedState(), that.getPreservedState());
     }
 
     @Override

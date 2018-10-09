@@ -1,12 +1,9 @@
 package pl.codepride.dailyadvisor.userservice.service;
 
+import com.datastax.driver.core.utils.UUIDs;
 import pl.codepride.dailyadvisor.userservice.model.Role;
 import pl.codepride.dailyadvisor.userservice.model.entity.User;
-//import pl.codepride.dailyadvisor.model.entity.UserProfile;
 import pl.codepride.dailyadvisor.userservice.model.request.NewUserRequest;
-//import pl.codepride.dailyadvisor.model.request.UserProfileRequest;
-//import pl.codepride.dailyadvisor.model.response.UserProfileResponse;
-//import pl.codepride.dailyadvisor.repository.UserProfileRepository;
 import pl.codepride.dailyadvisor.userservice.repository.UserRepository;
 import pl.codepride.dailyadvisor.userservice.service.Exceptions.DataRepositoryException;
 import pl.codepride.dailyadvisor.userservice.service.Exceptions.EntityExists;
@@ -25,20 +22,12 @@ public class UserServiceImpl implements UserService {
 
     private static final String MESSAGE_EXISTS_MESSAGE_CODE = "exception.entityNotFoundException.meal";
 
-    private static final String ROLE_COACH = "COACH";
-
-    private static final String ROLE_USER = "USER";
-
     @Autowired
     @Qualifier("userRepository")
     private UserRepository repository;
 
-//    @Autowired
-//    @Qualifier("userProfileRepository")
-//    private UserProfileRepository userProfileRepository;
-
-//    @Autowired
-//    public VerificationTokenService verificationTokenService;
+    @Autowired
+    public VerificationTokenService verificationTokenService;
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -87,69 +76,46 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void registerClient(NewUserRequest newUserRequest) {
-        registerUser(newUserRequest, ROLE_USER);
+        Role[] roles = {Role.USER};
+        registerUser(newUserRequest, Arrays.asList(roles));
     }
 
     @Override
     public void registerCoach(NewUserRequest newUserRequest) {
-        registerUser(newUserRequest, ROLE_COACH);
+        Role[] roles = {Role.COACH};
+        registerUser(newUserRequest, Arrays.asList(roles));
     }
 
     @Override
-    public void registerUser(NewUserRequest newUserRequest, String role) {
+    public void registerUser(NewUserRequest newUserRequest, List<Role> roles) {
         User user = new User(newUserRequest);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        String userRole = Role.valueOf(role).toString();
-        user.setRole(userRole);
+        user.setRoles(roles);
         repository.save(user);
-
-//        UserProfile userProfile = new UserProfile(userId, newUserRequest);
-//        userProfileRepository.save(userProfile);
     }
 
-//    @Override
-//    public UserProfileResponse createUserProfileResponseByUser(User userId) {
-//        UserProfile userProfile = userProfileRepository.findByUser(userId);
-//        return new UserProfileResponse(userId, userProfile);
-//    }
-
-//    @Override
-//    public void updateUserProfile(UserProfileRequest userProfileRequest, UUID userId) {
-//        userProfileRepository.updateUserProfile(userId, userProfileRequest.getCity(), userProfileRequest.getAbout(), userProfileRequest.getName(), userProfileRequest.getLastName());
-//    }
-
-//    @Override
-//    public void upgradeUserToCoach(User userId) {
-//        if (!userId.getRole().equals(Role.COACH.toString())) {
-//            userId.set.add(coachRole);
-//            repository.save(userId);
-//        }
-//    }
-
-//    @Override
-//    public List<UserProfile> findByUsers(List<User> users) {
-//        Set<User> usersSer = new HashSet<>(users);
-//        return new ArrayList<>(userProfileRepository.findByUserIn(usersSer));
-//    }
-
-//    @Override
-//    public List<UserProfile> findByCity(String city) {
-//        return userProfileRepository.findByCity(city);
-//    }
+    @Override
+    public void upgradeUserToCoach(User user) {
+        if (!user.getRoles().contains(Role.COACH)) {
+            user.getRoles().add(Role.COACH);
+            repository.save(user);
+        }
+    }
 
     @Override
-    public User enableUser(User user) throws DataRepositoryException {
+    public User enableUser(UUID userId) throws DataRepositoryException {
+        User user = repository.findById(userId).get();
         user.setEnabled(true);
         update(user);
         return user;
     }
 
-//    @Override
-//    public boolean confirmRegistration(String token) throws DataRepositoryException {
-//        User userId = verificationTokenService.confirmToken(token);
-//        enableUser(userId);
-//        return true;
-//    }
+    @Override
+    public boolean confirmRegistration(String token) throws DataRepositoryException {
+        UUID userId = verificationTokenService.confirmToken(token);
+        enableUser(userId);
+        return true;
+    }
 
     @Override
     public User registerOauth2User(String email) {
@@ -157,7 +123,9 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setEnabled(true);
         user.setActive(true);
-        user.setRole(Role.USER.toString());
+        user.setId(UUIDs.timeBased());
+        Role[] roles = {Role.USER};
+        user.setRoles(Arrays.asList(roles));
         return repository.save(user);
     }
 
